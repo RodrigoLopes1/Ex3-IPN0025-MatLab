@@ -1,0 +1,135 @@
+clear all
+dadosD1 = readtable('116n IPN0025.xlsx');
+dadosD2 = readtable('117n IPN0025.xlsx');
+
+tempo = datetime(2023,10,09,11,04,45:22003);
+
+filtered_BC1 = zeros(1,21959);
+filtered_BC2 = zeros(1,21959);
+filtered_BC3 = zeros(1,21959);
+filtered_BC4 = zeros(1,21959);
+
+tempo2 = datetime(2023,10,16,10,38,31:19261);
+
+
+for i = 1:1:21959
+    filtered_BC1(i) = dadosD1.BC1(i);
+    filtered_BC2(i) = dadosD1.BC2(i);
+    filtered_BC3(i) = dadosD1.BC3(i);
+    filtered_BC4(i) = dadosD1.BC4(i);
+    if i > 2000 && filtered_BC1(i) == 0
+        filtered_BC1(i) = filtered_BC1(i-1);
+    end
+    if i > 2000 && filtered_BC2(i) == 0
+        filtered_BC2(i) = filtered_BC2(i-1);
+    end
+    if i > 2000 && filtered_BC3(i) == 0
+        filtered_BC3(i) = filtered_BC3(i-1);
+    end
+    if i > 2000 && filtered_BC4(i) == 0
+        filtered_BC4(i) = filtered_BC4(i-1);
+    end
+end
+
+filtered_BC4_day2 = zeros(1,19231);
+filtered_BC1_day2 = zeros(1,19231);
+
+
+for i = 1:1:19231
+    filtered_BC4_day2(i) = dadosD2.BC4_(i);
+    filtered_BC1_day2(i) = dadosD2.BC1_(i);
+    if i > 2000 && filtered_BC4_day2(i) == 0
+        filtered_BC4_day2(i) = filtered_BC4_day2(i-1);
+    end
+
+    if i > 2000 && filtered_BC1_day2(i) == 0
+        filtered_BC1_day2(i) = filtered_BC1_day2(i-1);
+    end
+    
+end
+
+
+
+
+
+
+
+
+
+figure(1);
+graph_BC1 = plot(tempo(4000:21959),filtered_BC1(4000:21959),'-', 'LineWidth',1, 'Color', 'b');
+hold on;
+graph_BC2 = plot(tempo(4000:21959),filtered_BC2(4000:21959),'-', 'LineWidth',1, 'Color', 'r');
+graph_BC3 = plot(tempo(4000:21959),filtered_BC3(4000:21959),'-', 'LineWidth',1, 'Color', 'g');
+graph_BC4 = plot(tempo(4000:21959),filtered_BC4(4000:21959),'-', 'LineWidth',1, 'Color', 'black');
+title('Posições das barras');
+xlabel('Horário')
+ylabel('Posição de barra (%)')
+grid('on')
+legend([graph_BC1, graph_BC2, graph_BC3, graph_BC4], 'BC#1', 'BC#2', 'BC#3', 'BC#4');
+saveas(figure(1), './figuras/grafico_de_barras.png', 'png');
+
+figure(2);
+graph_reatividade3 = plot(tempo(9000:20000), dadosD1.ReatividadeM_diaCanal3(9000:20000));
+title('Gráfico da reatividade');
+xlabel('Horário')
+ylabel('Reatividade (pcm)')
+grid('on')
+saveas(figure(2), './figuras/grafico_de_reatividadeTotal.png', 'png');
+
+figure(3);
+graph_reatividade3_cicloUnico = plot(tempo(9300:10100), dadosD1.ReatividadeM_diaCanal3(9300:10100), 'Color', 'black');
+title('Gráfico da reatividade');
+xlabel('Horário')
+ylabel('Reatividade (pcm)')
+grid('on')
+saveas(figure(3), './figuras/grafico_de_reatividadeCiclo.png', 'png');
+
+figure(4);
+limInf = 7000;
+limSup = 12000;
+graph_Reatividade = plot(tempo(limInf:limSup), dadosD1.ReatividadeM_diaCanal3(limInf:limSup), 'LineWidth',1, 'Color', 'r');
+hold on 
+graph_BC2 = plot(tempo(limInf:limSup), filtered_BC2(limInf:limSup),'LineWidth',1, 'Color', 'g');
+graph_BC4 = plot(tempo(limInf:limSup), filtered_BC4(limInf:limSup),'LineWidth',1, 'Color', 'b'); 
+ylim([-10 160]);
+title('Comparação das posições das barras BC#2 e BC#4 com a reatividade');
+xlabel('Horário')
+ylabel('Posição de barra (%) e reatividade (pcm)')
+grid('on')
+legend([graph_BC2, graph_BC4, graph_Reatividade], 'BC#2', 'BC#4', 'Reatividade');
+saveas(figure(4), './figuras/grafico_de_reatividade_porBarra_BC2', 'png');
+
+figure(5);
+limInf = 7000;
+limSup = 15000;
+graph_Reatividade = plot(tempo(limInf:limSup), dadosD1.ReatividadeM_diaCanal3(limInf:limSup), 'LineWidth',1, 'Color', 'r');
+hold on 
+graph_BC1 = plot(tempo(limInf:limSup), filtered_BC1(limInf:limSup),'LineWidth',1, 'Color', 'g');
+graph_BC4 = plot(tempo(limInf:limSup), filtered_BC4(limInf:limSup),'LineWidth',1, 'Color', 'b'); 
+ylim([-10 160]);
+title('Comparação das posições das barras BC#1 e BC#4 com a reatividade');
+xlabel('Horário')
+ylabel('Posição de barra (%) e reatividade (pcm)')
+grid('on')
+legend([graph_BC1, graph_BC4, graph_Reatividade], 'BC#1', 'BC#4', 'Reatividade');
+saveas(figure(5), './figuras/grafico_de_reatividade_porBarra_BC1', 'png');
+
+
+
+figure(6);
+limInf = 5000;
+limSup = 19000;
+graph_d2_BC4 = plot(tempo2(limInf:limSup), filtered_BC4_day2(limInf:limSup),'LineWidth',1, 'color', 'r');
+hold on 
+graph_d2_Reatividade = plot(tempo2(limInf:limSup), dadosD2.ReatividadeM_diaCanal3(limInf:limSup),'LineWidth',1, 'color', 'b');
+graph_d2_BC1 = plot(tempo2(limInf:limSup), filtered_BC1_day2(limInf:limSup),'LineWidth',1, 'color', 'magenta');
+ylim([-10 140]);
+title('Comparação das posições das barras BC#1 e BC#4 com a reatividade do dia 2');
+xlabel('Horário')
+ylabel('Posição de barra (%) e reatividade (pcm)')
+legend([graph_d2_BC1, graph_d2_BC4, graph_d2_Reatividade], 'BC#1', 'BC#4', 'Reatividade');
+saveas(figure(6), './figuras/grafico_de_reatividade_porBarra_BC1_dia2', 'png');
+
+
+
