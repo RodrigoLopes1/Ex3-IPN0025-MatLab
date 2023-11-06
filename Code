@@ -1,6 +1,7 @@
 clear all
 dadosD1 = readtable('116n IPN0025.xlsx');
 dadosD2 = readtable('117n IPN0025.xlsx');
+ref = readtable('Grupo de percursores.xlsx');
 
 tempo = datetime(2023,10,09,11,04,45:22003);
 
@@ -130,6 +131,117 @@ xlabel('Horário')
 ylabel('Posição de barra (%) e reatividade (pcm)')
 legend([graph_d2_BC1, graph_d2_BC4, graph_d2_Reatividade], 'BC#1', 'BC#4', 'Reatividade');
 saveas(figure(6), './figuras/grafico_de_reatividade_porBarra_BC1_dia2', 'png');
+
+
+
+figure(7)
+graph_reativ = plot(tempo, dadosD1.Periodo)
+
+
+
+%estabilidade de barra
+contador = 0;
+posicoes_BC4 = zeros(1,1000);
+cont = 1;
+for i = 1:1:21958
+    if filtered_BC4(i) == filtered_BC4(i+1) && posicoes_BC4(cont) ~= filtered_BC4(i)
+        contador = contador + 1;
+    end
+    if contador > 10
+        posicoes_BC4(cont) = filtered_BC4(i-1);
+        contador = 0;
+        cont = cont + 1;
+    end
+end
+
+
+
+
+
+
+
+estab = zeros(4, 2000);
+cont = 1;
+j = 1;
+i = 1;
+primeiraVez = 1;
+contado = 0;
+contado2 = 0;
+check = zeros (1, 22000);
+while i < 21950
+    while filtered_BC4(i) == filtered_BC4(i+1) && i < 21950
+        check(i) = filtered_BC4(i);
+        if primeiraVez == 1
+            j = j + 1;
+            primeiraVez = 0;
+            estab(3, j) = i;
+            contado2 = contado2 + 1;
+        end
+        estab(1,j) = filtered_BC4(i);
+        estab(2, j) = cont;
+        cont = cont + 1;
+        %fprintf("Passei por aqui  \n");
+        i = i + 1;
+        contado = contado + 1;
+    end
+    %fprintf("Passei por aqui2  \n");
+    primeiraVez = 1;
+    i = i + cont + 1;
+    cont = 0;
+    %disp(i);
+end
+
+
+
+%calculo do novo gráfico 
+
+pontos_estab = [100.65 94.50 90.40 87.00 84.00 81.50 79.00 76.50 74.00 71.70 69.50 67.30 65.20 63.00 60.90 59.00 57.00 55.00 53.00 51.25 49.40 47.50 45.55 43.60 41.67 39.76 37.60 35.56 33.60 31.50 29.50 27.00 24.40 21.80 18.60 14.60 09.70 02.00];
+
+periodo =      [066.20 64.26 66.58 62.87 76.45 68.73 65.51 63.79 60.67 63.96 57.16 61.85 61.67 62.40 65.32 65.03 60.46 59.21 63.96 64.45 62.75 60.67 57.77 56.55 63.86 56.45 55.08 66.38 63.16 68.23 60.29 60.60 70.96 61.29 60.34 62.35 62.24 56.58];  
+
+test = zeros(1, 38);
+for j = 1:1:38
+    prov = 0;
+    for i = 1:1:6
+        prov = prov + ((ref.B1(i))/(1+ref.Yi(i)*periodo(1)));  
+    end
+
+    test(j) = prov;
+end
+    
+for i = 1:1:38 
+    test(i) = test(i) * 10^5;
+end
+
+
+reativ = zeros(1, 38);
+for i = 1:1:38
+    if i ~= 1
+        reativ(i) = reativ(i-1) + test(i);
+    end
+    if i == 1
+        reativ(i) = test(i);
+    end
+end
+
+
+
+
+for i = 1:1:38
+    pontos_estab(i) = 100 - pontos_estab(i);
+end
+
+
+
+figure(7)
+grafico_final = plot(pontos_estab(1:38), reativ);
+ylim([0 4000]);
+xlim([0 100]);
+grid on;
+title('Gráfico de reatividade por porcentagem de barra retirada');
+xlabel('Porcentagem de barra (%)')
+ylabel('reatividade (pcm)')
+saveas(figure(7), './figuras/grafico_final', 'png');
 
 
 
